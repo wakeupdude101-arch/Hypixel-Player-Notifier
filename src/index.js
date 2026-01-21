@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Client, IntentsBitField } = require('discord.js');
 
 const client = new Client({
@@ -21,9 +22,9 @@ client.on('messageCreate', (message) => {
 
     console.log(message.content);
     if(message.content === '$help'){
-        message.reply('$help');
+        message.reply('Looking for help? How can I assist you?');
         message.react('🤨');
     };
 });
 
-client.login("MTIzNTk3MzA2MTAyMzYzMzQxOQ.GKqUoe.zl58_W9w6t8TBsp3tNKxdlkCkoy-38ZTaGLHTs");
+client.login(process.env.TOKEN);
