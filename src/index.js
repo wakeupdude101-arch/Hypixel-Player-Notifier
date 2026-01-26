@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -28,26 +28,39 @@ client.on('messageCreate', (message) => {
 });
 
 client.on('interactionCreate', (interaction) => {
- 
+
+    const ign = interaction.options.get('username')?.value;
+    const ign2 = interaction.options.get('username')?.value;
+    const ip = interaction.options.get('server-ip')?.value;
+
+    const bothMessage = `${ign2} is now offline on ${ip}!`;
+    const singleMessage = `${ign2} is now offline!`;
 
     switch(interaction.commandName){
         case 'ping':
             interaction.reply('Pong!');
         break;
         case 'status':
-            const ign = interaction.options.get('username').value;
             interaction.reply('So, Your Minecraft username is: ' + ign);
         break;
         case 'notify':
-            const ign2 = interaction.options.get('username').value;
-            const ip = interaction.options.get('server-ip')?.value;
+           if(ip === undefined){
+            const notifyEmbed = new EmbedBuilder().setColor('Random').setTitle(singleMessage).setFields(
+                { name: 'Uuid: ', value: 'be4281019322446a9e08aff752b0d4b4' },
+                { name: 'You will be notified on next login.', value: '\u200b' },
+            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            interaction.reply({ embeds: [notifyEmbed] });
+        }else{
+            const notifyEmbed = new EmbedBuilder().setColor('Random').setTitle(bothMessage).setFields(
+                { name: 'Uuid: ', value: 'be4281019322446a9e08aff752b0d4b4' },
+                { name: 'You will be notified on next login.', value: '\u200b' },
+            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            interaction.reply({ embeds: [notifyEmbed] });
+        }
             
-            finalmessage = 'Minecraft ign = ' + ign2;
-            if (ip != null){
-                finalmessage += '\n Server ip = ' + ip;
-            }
-                interaction.reply(finalmessage);
-            
+        break;
+        case 'notify-list':
+            interaction.reply('Sup buddy you aint powerful enough to use this command.');
         break;
         default:
             interaction.reply('Something went wrong, MB!');

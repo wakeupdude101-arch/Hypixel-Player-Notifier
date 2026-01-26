@@ -38,6 +38,11 @@ const commands = [
             },
         ],
     },
+
+    {
+        name: 'notify-list',
+        description: 'List of all players to notify',
+    },
 ];
 
 
