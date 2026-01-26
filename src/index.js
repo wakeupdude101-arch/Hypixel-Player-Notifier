@@ -26,11 +26,33 @@ client.on('messageCreate', (message) => {
         message.react('🤨');
     };
 });
-client.on('interactionCreate', async (interaction) => {
-    if(!interaction.isChatInputCommand()) return;
 
-    if(interaction.commandName === 'ping'){
-        interaction.reply('Pong!');
-    }
+client.on('interactionCreate', (interaction) => {
+ 
+
+    switch(interaction.commandName){
+        case 'ping':
+            interaction.reply('Pong!');
+        break;
+        case 'status':
+            const ign = interaction.options.get('username').value;
+            interaction.reply('So, Your Minecraft username is: ' + ign);
+        break;
+        case 'notify':
+            const ign2 = interaction.options.get('username').value;
+            const ip = interaction.options.get('server-ip')?.value;
+            
+            finalmessage = 'Minecraft ign = ' + ign2;
+            if (ip != null){
+                finalmessage += '\n Server ip = ' + ip;
+            }
+                interaction.reply(finalmessage);
+            
+        break;
+        default:
+            interaction.reply('Something went wrong, MB!');
+    };
 });
+
+
 client.login(process.env.TOKEN);

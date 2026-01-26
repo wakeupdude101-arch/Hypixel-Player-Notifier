@@ -1,10 +1,42 @@
 require('dotenv').config();
-const { REST, Routes } = require('discord.js');
+const { REST, Routes, ApplicationCommandOptionType, Options } = require('discord.js');
 
 const commands = [
     {
         name: 'ping',
         description: 'Replies with Pong!',
+    },
+
+    {
+        name: 'status',
+        description: 'Get the status of the player.',
+        options: [
+            {
+                name: 'username',
+                description: 'Minecraft name',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+        ],
+    },
+
+    {
+        name: 'notify',
+        description: 'Notifies user if player comes online.',
+        options: [
+            {
+                name: 'username',
+                description: 'Minecraft Name',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+            {
+                name: 'server-ip',
+                description: 'Ip address of a server',
+                type: ApplicationCommandOptionType.String,
+                required: false,
+            },
+        ],
     },
 ];
 
