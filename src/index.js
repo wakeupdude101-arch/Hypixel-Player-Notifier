@@ -1,5 +1,10 @@
 require('dotenv').config();
 const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected via .env!'))
+  .catch(err => console.log(err));
 
 const client = new Client({
     intents: [
@@ -47,15 +52,20 @@ client.on('interactionCreate', async (interaction) => {
     const userData = await userStatus.json();
     const playerData = await fetch(`https://api.hypixel.net/v2/player?key=${API_KEY}&uuid=${PLAYER_UUID}`);
     const pData = await playerData.json();
-    const lastLogin = pData.player.lastLogin;
-    const firstLogin = pData.player.firstLogin;
-    const lastLogout = pData.player.mostRecentGameType;
+    // const playerSkinHead = await fetch(`https://mineskin.eu/avatar/${PLAYER_UUID}`);
+    // const headSkin = await playerSkinHead.json();
+    
+    const lastLogin = pData.player?.lastLogin || 'Api Disabled!';
+    const firstLogin = pData.player?.firstLogin;
+    const lastLogout = pData.player?.mostRecentGameType || 'Api Disabled!';
     const discordName = pData.player?.socialMedia?.links?.DISCORD || 'Not Linked!';
     //console.log(pData.player.firstLogin);
     
     const onlineMessage = `${uuid.name} is now Online`;
     const offlineMessage = `${uuid.name} is now offline`;
-    return {uuid, userData, PLAYER_UUID, pData, lastLogin, firstLogin, lastLogout, statMessage, onlineMessage, offlineMessage, bothMessage, singleMessage, discordName};
+    const ipOnlineMessage = `${uuid.name} is now Online on ${ip}`
+    const ipOfflineMessage = `${uuid.name} is now Offline on ${ip}`
+    return {uuid, userData, PLAYER_UUID, pData, lastLogin, firstLogin, lastLogout, statMessage, onlineMessage, offlineMessage, bothMessage, singleMessage, discordName, ipOnlineMessage, ipOfflineMessage};
     };
 
 
@@ -69,11 +79,16 @@ client.on('interactionCreate', async (interaction) => {
         case 'status':
         const Data = await lovely();
         const firstTime = `<t:${Math.floor(Data.firstLogin/1000)}:F>`;
-        const secondTime = `<t:${Math.floor(Data.lastLogin/1000)}:F>`;
+        let secondTime;
+        if (!Data.lastLogin || isNaN(Data.lastLogin)){
+            secondTime = 'Unavailable';
+        }else{
+            secondTime = `<t:${Math.floor(Data.lastLogin/1000)}:R>`;
+        }
         const betterTicks = `\`${Data.discordName}\``;
 
             if (!Data.uuid || !Data.uuid.id){
-               interaction.reply({ ephemeral: true, content: "Player doesn't exists" });
+               interaction.reply({ ephemeral: true, content: "Player doesn't exist." });
                return;
             }else if(Data.userData.session.online === false ){
                 const statusEmbed = new EmbedBuilder().setColor('Red').setTitle(Data.offlineMessage).setFields(
@@ -81,34 +96,53 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Discord ', value: betterTicks},
                 { name: 'Last Online', value: secondTime},
                 { name: 'First Login', value: firstTime },
-            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
                 interaction.reply({ ephemeral: true, embeds: [statusEmbed] });
             }else{
                 const statusEmbed = new EmbedBuilder().setColor('Green').setTitle(Data.onlineMessage).setFields(
                 { name: 'Status: ', value: '🟩 Online' },
                 { name: 'Discord: ', value: betterTicks},
                 { name: 'Game: ', value: Data.lastLogout},
-                { name: 'Last Online', value: secondTime},
+                { name: 'Joined', value: secondTime},
                 { name: 'First Login', value: firstTime},
-            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
             interaction.reply({ ephemeral: true, embeds: [statusEmbed] });
             }
         break;
         case 'notify':
         const Data2 = await lovely();
-           if(ip === undefined){
-            const notifyEmbed = new EmbedBuilder().setColor('Random').setTitle(Data2.singleMessage).setFields(
-                { name: 'Uuid: ', value: Data2.userData.uuid },
+        if (!Data2.uuid || !Data2.uuid.id && ip === undefined){
+               interaction.reply({ ephemeral: true, content: "Player doesn't exist." });
+               return;
+        }else if (!Data2.uuid || !Data2.uuid.id){
+               interaction.reply({ ephemeral: true, content: "Player doesn't exist" });
+               return;
+        }else if(ip === undefined && Data2.userData.session.online === false){
+            const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data2.offlineMessage).setFields(
+                { name: 'Uuid: ', value: Data2.PLAYER_UUID },
                 { name: 'You will be notified on next login.', value: '\u200b' },
-            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
-        }else{
-            const notifyEmbed = new EmbedBuilder().setColor('Random').setTitle(Data2.bothMessage).setFields(
-                { name: 'Uuid: ', value: Data2.userData.uuid },
+        }else if(ip === undefined && Data2.userData.session.online === true){
+            const notifyEmbed = new EmbedBuilder().setColor('Green').setTitle(Data2.onlineMessage).setFields(
+                { name: 'Uuid: ', value: Data2.PLAYER_UUID },
                 { name: 'You will be notified on next login.', value: '' },
-            ).setThumbnail('https://i.imgur.com/LUn8WDe.png').setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
-        }
+        }else if(Data2.userData.session.online === false){
+            const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data2.ipOfflineMessage).setFields(
+                { name: 'Uuid: ', value: Data2.PLAYER_UUID},
+                { name: 'You will be notified on next login.', value: '\u200b' },
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
+        }else if(Data2.userData.session.online === true){
+            const notifyEmbed = new EmbedBuilder().setColor('Green').setTitle(Data2.ipOnlineMessage).setFields(
+                { name: 'Uuid: ', value: Data2.PLAYER_UUID },
+                { name: 'You will be notified on next login.', value: '\u200b' },
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
+
+        };
             
         break;
         case 'notify-list':
