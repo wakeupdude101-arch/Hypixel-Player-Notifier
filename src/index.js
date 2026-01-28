@@ -96,7 +96,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Discord ', value: betterTicks},
                 { name: 'Last Online', value: secondTime},
                 { name: 'First Login', value: firstTime },
-            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
                 interaction.reply({ ephemeral: true, embeds: [statusEmbed] });
             }else{
                 const statusEmbed = new EmbedBuilder().setColor('Green').setTitle(Data.onlineMessage).setFields(
@@ -105,7 +105,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Game: ', value: Data.lastLogout},
                 { name: 'Joined', value: secondTime},
                 { name: 'First Login', value: firstTime},
-            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
             interaction.reply({ ephemeral: true, embeds: [statusEmbed] });
             }
         break;
@@ -121,25 +121,25 @@ client.on('interactionCreate', async (interaction) => {
             const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data2.offlineMessage).setFields(
                 { name: 'Uuid: ', value: Data2.PLAYER_UUID },
                 { name: 'You will be notified on next login.', value: '\u200b' },
-            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
         }else if(ip === undefined && Data2.userData.session.online === true){
             const notifyEmbed = new EmbedBuilder().setColor('Green').setTitle(Data2.onlineMessage).setFields(
                 { name: 'Uuid: ', value: Data2.PLAYER_UUID },
                 { name: 'You will be notified on next login.', value: '' },
-            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.'});
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
         }else if(Data2.userData.session.online === false){
             const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data2.ipOfflineMessage).setFields(
                 { name: 'Uuid: ', value: Data2.PLAYER_UUID},
                 { name: 'You will be notified on next login.', value: '\u200b' },
-            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.'});
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
         }else if(Data2.userData.session.online === true){
             const notifyEmbed = new EmbedBuilder().setColor('Green').setTitle(Data2.ipOnlineMessage).setFields(
                 { name: 'Uuid: ', value: Data2.PLAYER_UUID },
                 { name: 'You will be notified on next login.', value: '\u200b' },
-            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'by @wakeupdude.', iconURL: 'https://imgur.com/a/SV1QkKc' });
+            ).setThumbnail(`https://mineskin.eu/avatar/${Data2.PLAYER_UUID}`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.'});
             interaction.reply({ ephemeral: true, embeds: [notifyEmbed] });
 
         };
