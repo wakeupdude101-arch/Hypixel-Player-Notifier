@@ -30,12 +30,6 @@ const commands = [
                 type: ApplicationCommandOptionType.String,
                 required: true,
             },
-            {
-                name: 'server-ip',
-                description: 'Ip address of a server',
-                type: ApplicationCommandOptionType.String,
-                required: false,
-            },
         ],
     },
 
@@ -43,6 +37,32 @@ const commands = [
         name: 'notify-list',
         description: 'List of all players to notify',
     },
+    {
+        name: 'notify-remove',
+        description: 'Remove player from notify list',
+        options: [
+            {
+                name: 'username',
+                description: 'Minecraft Name',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            }
+        ]
+    },
+
+    {
+        name: 'api-key',
+        description: 'Register your hypixel api key.',
+        options: [
+            {
+                name: 'key',
+                description: 'Enter your Api key.',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+        ],
+    },
+
 ];
 
 
