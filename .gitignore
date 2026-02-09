@@ -7,6 +7,3 @@ models/User.js
 
 # Folders
 node_modules/
-
-# /Slash Commands
-src/register-commands.js

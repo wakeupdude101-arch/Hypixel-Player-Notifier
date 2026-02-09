@@ -2,7 +2,7 @@ const User = require('../models/User');
 console.log('User Model check:', User.findOneAndUpdate ? '✅ Working' : '❌ Broken');
 console.log('User Value:', User);
 require('dotenv').config();
-const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder, Partials } = require('discord.js');
 const data = require("../config/data");
 
 const db = new data();
@@ -15,6 +15,11 @@ const client = new Client({
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
+        IntentsBitField.Flags.DirectMessages,
+    ],
+    partials: [
+        Partials.Channel,
+        Partials.Message,
     ],
 });
 
@@ -112,7 +117,7 @@ client.on('interactionCreate', async (interaction) => {
             }
         break;
         case 'status':
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply();
         const profile2 = await User.findOne({ discordId: interaction.user.id });
         if (!profile2 || !profile2.hypixelKey) {
             const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle("You haven't registered! Use `/api-key` first.").setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
@@ -121,7 +126,7 @@ client.on('interactionCreate', async (interaction) => {
         const Data = await lovely(profile2.hypixelKey);
         if(Data.keyChecker === "Invalid API key"){
                 const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data.invalidApiKey).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
-            await interaction.editReply({ ephemeral: true, embeds: [notifyEmbed] });
+            await interaction.editReply({ embeds: [notifyEmbed] });
             return;
             }
         let firstTime;
@@ -140,7 +145,7 @@ client.on('interactionCreate', async (interaction) => {
 
             if (!Data.uuid || !Data.uuid.id){
                const notifyEmbed = new EmbedBuilder().setColor('Red').setTitle(Data.doesntExist).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
-            await interaction.editReply({ ephemeral: true, embeds: [notifyEmbed] });
+            await interaction.editReply({ embeds: [notifyEmbed] });
                return;
             }else if(Data.userData.session.online === false ){
                 const statusEmbed = new EmbedBuilder().setColor('Red').setTitle(Data.offlineMessage).setFields(
@@ -149,7 +154,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Last Online', value: secondTime},
                 { name: 'First Login', value: firstTime },
             ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
-                await interaction.editReply({ ephemeral: true, embeds: [statusEmbed] });
+                await interaction.editReply({ embeds: [statusEmbed] });
             }else{
                 const statusEmbed = new EmbedBuilder().setColor('Green').setTitle(Data.onlineMessage).setFields(
                 { name: 'Status: ', value: '🟩 Online' },
@@ -159,7 +164,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Joined', value: secondTime},
                 { name: 'First Login', value: firstTime},
             ).setThumbnail(`https://mineskin.eu/body/${Data.PLAYER_UUID}.png`).setTimestamp().setFooter({ text: 'Made by @wakeupdude.' });
-            await interaction.editReply({ ephemeral: true, embeds: [statusEmbed] });
+            await interaction.editReply({ embeds: [statusEmbed] });
             }
         break;
         case 'notify':
