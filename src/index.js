@@ -277,7 +277,7 @@ client.on('interactionCreate', async (interaction) => {
         await profile4.save();
     
         const successEmbed = new EmbedBuilder()
-        .setColor('Orange') // Orange is a good "action" color for removals
+        .setColor('Orange')
         .setTitle('Player Removed')
         .setDescription(`Successfully removed **${targetName}** from your notifications.`)
         .addFields({ name: 'Remaining Slots', value: `${profile4.trackedPlayers.length}/10`, inline: true })
