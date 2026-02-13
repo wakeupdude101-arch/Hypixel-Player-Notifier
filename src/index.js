@@ -1,3 +1,14 @@
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 10000;
+
+app.get('/', (req, res) => {
+  res.send('Bot is alive and healthy!');
+});
+
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});
 const User = require('../models/User');
 console.log('User Model check:', User.findOneAndUpdate ? '✅ Working' : '❌ Broken');
 console.log('User Value:', User);
