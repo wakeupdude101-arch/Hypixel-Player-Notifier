@@ -38,6 +38,9 @@ client.on('ready', (c) => {
     console.log(`✅ ${c.user.username} is online.`);
     startHeartbeat(client);
 });
+client.login(process.env.TOKEN).catch(err => {
+    console.error("DISCORD LOGIN ERROR:", err.message);
+});
 
 client.on('messageCreate', (message) => {
     if(message.author.bot){
