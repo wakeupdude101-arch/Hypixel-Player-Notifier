@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 10000;
 
 app.get('/', (req, res) => {
-  res.send('Bot is alive and healthy!');
+  res.send('Bot is alive.');
 });
 
 app.listen(port, () => {
@@ -34,7 +34,7 @@ const client = new Client({
     ],
 });
 
-client.on('clientReady', (c) => {
+client.on('ready', (c) => {
     console.log(`✅ ${c.user.username} is online.`);
     startHeartbeat(client);
 });
@@ -378,4 +378,4 @@ async function startHeartbeat(client) {
 
 
 
-client.login(process.env.TOKEN);
+console.log("Token found:", process.env.TOKEN ? "Yes" : "No");
