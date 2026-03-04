@@ -101,6 +101,21 @@ client.on('interactionCreate', async (interaction) => {
     return {uuid, userData, PLAYER_UUID, pData, lastLogin, firstLogin, lastLogout, statMessage, onlineMessage, offlineMessage, bothMessage, singleMessage, discordName, ipOnlineMessage, ipOfflineMessage, doesntExist, keyChecker, invalidApiKey, gameTypo, modeTypo, validApiKey};
     };
 
+    if (interaction.isAutocomplete()) {
+        if (interaction.commandName === 'status-remover') {
+            const profile = await User.findOne({ discordId: interaction.user.id });
+            if (!profile) return await interaction.respond([]);
+
+            const focusedValue = interaction.options.getFocused().toLowerCase();
+            const choices = profile.trackedPlayers
+                .filter(p => p.username.toLowerCase().includes(focusedValue))
+                .map(p => ({ name: p.username, value: p.username }))
+                .slice(0, 25);
+
+            return await interaction.respond(choices);
+        }
+    }
+    if (!interaction.isChatInputCommand()) return;
 
  
     
@@ -260,6 +275,7 @@ client.on('interactionCreate', async (interaction) => {
 
          await interaction.editReply({ embeds: [listEmbed] });
         break;
+
         case 'notify-remove':
         await interaction.deferReply({ ephemeral: true });
         const targetName = interaction.options.get('username')?.value;
@@ -305,6 +321,102 @@ client.on('interactionCreate', async (interaction) => {
 
         await interaction.editReply({ embeds: [successEmbed] });
         break;
+
+        case 'status-notify':
+    await interaction.deferReply();
+    
+    const ign5 = interaction.options.get('username')?.value;
+    const profile6 = await User.findOne({ discordId: interaction.user.id });
+
+    if (!profile6 || !profile6.hypixelKey) {
+        return await interaction.editReply("Use `/api-key` first!");
+    }
+
+    const Data4 = await lovely(profile6.hypixelKey, ign5); 
+    if (isOnline === false && currentArea === 'Unknown') {
+    const warningEmbed = new EmbedBuilder()
+        .setColor('Yellow')
+        .setTitle('Limited API Access')
+        .setDescription(`I've added **${Data4.uuid.name}**, but their **Online Status API** is turned off.\n\nTo get notifications, they need to run \`/settings\` on Hypixel and enable the **Online Status** and **Recent Games** API.`)
+        .setTimestamp()
+        .setFooter({ text: 'Made by @wakeupdude.' });
+
+    await interaction.followUp({ embeds: [warningEmbed], ephemeral: true });
+}
+
+    if (!Data4.uuid) return await interaction.editReply("Player not found.");
+
+    const isOnline = Data4.userData.session.online;
+    const currentArea = Data4.userData.session.mode || 'Unknown';
+
+    const statusEmbed = new EmbedBuilder()
+        .setColor(isOnline ? 'Green' : 'Red')
+        .setTitle(`Status for ${Data4.uuid.name}`)
+        .addFields(
+            { name: 'Currently', value: isOnline ? '🟩 Online' : '🟥 Offline', inline: true },
+            { name: 'Area', value: `${currentArea}`, inline: true }
+        )
+        .setThumbnail(`https://mineskin.eu/avatar/${Data4.PLAYER_UUID}`)
+        .setFooter({ text: 'Auto-added to your notify list!',
+            text: 'Made by @wakeupdude.'
+         });
+
+    const alreadyTracking = profile6.trackedPlayers.some(p => p.uuid === Data4.PLAYER_UUID);
+
+    if (!alreadyTracking) {
+        profile6.trackedPlayers.push({
+            username: Data4.uuid.name,
+            uuid: Data4.PLAYER_UUID,
+            lastStatus: isOnline,
+            lastArea: currentArea
+        });
+        await profile6.save();
+    }
+
+    await interaction.editReply({ embeds: [statusEmbed] });
+    break;
+
+    case 'status-remover': {
+    await interaction.deferReply();
+    const ign3 = interaction.options.getString('username');
+
+    const user = await User.findOne({ discordId: interaction.user.id });
+
+    const playerExists = user?.trackedPlayers.some(
+        p => p.username.toLowerCase() === ign3.toLowerCase()
+    );
+
+    if (!playerExists) {
+        const errorEmbed = new EmbedBuilder()
+            .setColor('Red')
+            .setTitle('Player Not Found')
+            .setDescription(`**${ign3}** isn't on your watch list, so I can't remove them!`)
+            .setTimestamp()
+            .setFooter({ text: 'Made by @wakeupdude.' });
+
+        return await interaction.editReply({ embeds: [errorEmbed] });
+    }
+
+    await User.findOneAndUpdate(
+        { discordId: interaction.user.id },
+        { $pull: { trackedPlayers: { username: { $regex: new RegExp(`^${ign3}$`, 'i') } } } }
+    );
+
+    const successEmbed = new EmbedBuilder()
+        .setColor('Green')
+        .setTitle('Player Removed')
+        .setDescription(`Successfully removed **${ign3}** from your watch list.`)
+        .addFields({ 
+            name: 'Slots Available', 
+            value: `${user.trackedPlayers.length - 1}/10`, 
+            inline: true 
+        })
+        .setTimestamp()
+        .setFooter({ text: 'Made by @wakeupdude.' });
+
+    await interaction.editReply({ embeds: [successEmbed] });
+    break;
+}
         default:
             interaction.reply('Something went wrong, MB!');
         };
@@ -318,59 +430,65 @@ async function startHeartbeat(client) {
         const users = await User.find({ "trackedPlayers.0": { $exists: true } });
 
         for (const user of users) {
+            let userNeedsSaving = false;
+
             for (const player of user.trackedPlayers) {
                 try {
-                    
                     const response = await fetch(`https://api.hypixel.net/status?key=${user.hypixelKey}&uuid=${player.uuid}`);
 
-                  
                     if (response.status === 429) {
-                        console.log(`429 Error: Key ${user.hypixelKey.slice(0, 8)} is rate limited! Skipping user.`);
+                        console.log(`Rate limited on key ending in ...${user.hypixelKey.slice(-4)}`);
                         break; 
                     }
 
-                    
-                    const remaining = response.headers.get('RateLimit-Remaining');
-                    if (remaining && parseInt(remaining) < 2) {
-                        console.log(`Key low on requests (${remaining}). Ending cycle early.`);
-                        return; 
-                    }
-
                     const data = await response.json();
-                    if (!data.success) continue;
+                    if (!data.success || !data.session) continue;
 
                     const isOnlineNow = data.session.online;
+                    const currentArea = data.session.mode || 'Unknown';
 
+                    const statusChanged = isOnlineNow !== player.lastStatus;
                     
-                    if (isOnlineNow !== player.lastStatus) {
-                        
-                        player.lastStatus = isOnlineNow;
-                        await user.save();
+                    const areaChanged = isOnlineNow && player.lastStatus && currentArea !== player.lastArea;
 
-                      
+                    if (statusChanged || areaChanged) {
                         const discordUser = await client.users.fetch(user.discordId).catch(() => null);
+                        
                         if (discordUser) {
-                            const statusEmoji = isOnlineNow ? '🟩' : '🟥';
-                            const statusWord = isOnlineNow ? 'ONLINE' : 'OFFLINE';
-                            
-                            const alertEmbed = new EmbedBuilder()
-                                .setColor(isOnlineNow ? 'Green' : 'Red')
-                                .setTitle(`${statusEmoji} Status Change: ${player.username}`)
-                                .setDescription(`**${player.username}** is now **${statusWord}**!`)
-                                .setTimestamp();
+                            let embed = new EmbedBuilder().setTimestamp();
 
-                            await discordUser.send({ embeds: [alertEmbed] }).catch(() => {
-                                console.log(`Couldn't DM ${user.discordId} (DMs off)`);
-                            });
+                            if (statusChanged) {
+                                embed.setColor(isOnlineNow ? 'Green' : 'Red')
+                                     .setTitle(`${isOnlineNow ? '🟩' : '🟥'} Status: ${player.username}`)
+                                     .setDescription(`**${player.username}** is now **${isOnlineNow ? 'ONLINE' : 'OFFLINE'}**!`)
+                                     .setTimestamp()
+                                     .setFooter({ text: 'Made by @wakeupdude.' });
+                            } else if (areaChanged) {
+                                embed.setColor('Blue')
+                                     .setTitle(`Movement: ${player.username}`)
+                                     .setDescription(`**${player.username}** moved from **${player.lastArea}** to **${currentArea}**!`)
+                                     .setTimestamp()
+                                     .setFooter({ text: 'Made by @wakeupdude.' });
+                            }
+
+                            await discordUser.send({ embeds: [embed] }).catch(() => {});
                         }
+
+                        player.lastStatus = isOnlineNow;
+                        player.lastArea = currentArea;
+                        userNeedsSaving = true;
                     }
 
-                  
                     await new Promise(resolve => setTimeout(resolve, 500));
 
                 } catch (err) {
-                    console.error(`Error in heartbeat for ${player.username}:`, err);
+                    console.error(`Error checking ${player.username}:`, err);
                 }
+            }
+
+            if (userNeedsSaving) {
+                user.markModified('trackedPlayers');
+                await user.save();
             }
         }
 
@@ -378,7 +496,6 @@ async function startHeartbeat(client) {
         console.log(`Checking done in ${duration}s.`);
     }, 60000);
 }
-
 
 
 console.log("Token found:", process.env.TOKEN ? "Yes" : "No");

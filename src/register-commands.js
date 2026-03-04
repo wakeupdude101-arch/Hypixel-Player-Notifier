@@ -81,6 +81,39 @@ const commands = [
         ],
     },
 
+    {
+        name: 'status-notify',
+        description: 'Notifies when status of a player gets changed.',
+        dm_permission: true,
+        integration_types: [0, 1],
+        contexts: [0, 1, 2],
+        options: [
+            {
+                name: 'username',
+                description: 'Enter a username.',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+        ],
+    },
+
+    {
+    name: 'status-remover',
+    description: 'Removes a player from the status.',
+    dm_permission: true,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+    options: [
+        {
+            name: 'username',
+            description: 'The player to stop tracking.',
+            type: ApplicationCommandOptionType.String,
+            required: true,
+            autocomplete: true,
+        },
+    ],
+},
+
 ];
 
 
